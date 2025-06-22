@@ -181,19 +181,30 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 async function classifyImage() {
-  const input = document.getElementById("fileInput");
   const resultDiv = document.getElementById("resultState");
+  const canvas = document.getElementById("canvasElement");
+  const fileInput = document.getElementById("fileInput");
 
-  if (!input.files[0]) {
-    resultDiv.innerHTML = `<p class="text-red-600">Silakan pilih gambar terlebih dahulu.</p>`;
+  let file;
+
+  // Cek sumber gambar
+  if (fileInput.files[0]) {
+    file = fileInput.files[0]; // dari upload
+  } else if (!canvas.classList.contains("hidden")) {
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    file = new File([blob], 'captured.png', { type: 'image/png' }); // dari kamera
+  } else {
+    resultDiv.innerHTML = `<p class="text-red-600">Silakan unggah atau ambil gambar terlebih dahulu.</p>`;
     return;
   }
 
-  const file = input.files[0];
   const formData = new FormData();
   formData.append("file", file);
 
-  resultDiv.innerHTML = "Memproses gambar...";
+  resultDiv.innerHTML = `
+    <div class="flex items-center justify-center text-gray-600 py-6">
+      <i class="fas fa-spinner fa-spin text-xl mr-2"></i> Memproses gambar...
+    </div>`;
 
   try {
     const response = await fetch("https://calluu-klasifikasi-padi.hf.space/predict", {
@@ -206,6 +217,7 @@ async function classifyImage() {
     if (data.results && Array.isArray(data.results) && data.results.length > 0) {
       const main = data.results[0];
       const others = data.results.slice(1);
+
       let html = `
         <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
           <div class="flex items-start">
@@ -254,11 +266,14 @@ async function classifyImage() {
       }
 
       resultDiv.innerHTML = html;
+
     } else {
       resultDiv.innerHTML = `<p class="text-red-600">Tidak ada hasil yang bisa ditampilkan.</p>`;
     }
+
   } catch (error) {
     resultDiv.innerHTML = `<p class="text-red-600">Terjadi kesalahan. Coba lagi.</p>`;
     console.error(error);
   }
 }
+
