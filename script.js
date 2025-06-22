@@ -184,15 +184,17 @@ async function classifyImage() {
   const resultDiv = document.getElementById("resultState");
   const canvas = document.getElementById("canvasElement");
   const fileInput = document.getElementById("fileInput");
+  const previewImage = document.getElementById("previewImage");
 
   let file;
 
-  // Cek sumber gambar
   if (fileInput.files[0]) {
-    file = fileInput.files[0]; // dari upload
-  } else if (!canvas.classList.contains("hidden")) {
+    // dari unggah file
+    file = fileInput.files[0];
+  } else if (previewImage.src && previewImage.src.startsWith("data:image")) {
+    // dari kamera, ambil dari canvas (meskipun hidden)
     const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-    file = new File([blob], 'captured.png', { type: 'image/png' }); // dari kamera
+    file = new File([blob], 'captured.png', { type: 'image/png' });
   } else {
     resultDiv.innerHTML = `<p class="text-red-600">Silakan unggah atau ambil gambar terlebih dahulu.</p>`;
     return;
@@ -266,14 +268,12 @@ async function classifyImage() {
       }
 
       resultDiv.innerHTML = html;
-
     } else {
       resultDiv.innerHTML = `<p class="text-red-600">Tidak ada hasil yang bisa ditampilkan.</p>`;
     }
 
   } catch (error) {
-    resultDiv.innerHTML = `<p class="text-red-600">Terjadi kesalahan. Coba lagi.</p>`;
+    resultDiv.innerHTML = `<p class="text-red-600">Terjadi kesalahan saat klasifikasi.</p>`;
     console.error(error);
   }
 }
-
